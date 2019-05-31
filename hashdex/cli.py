@@ -22,7 +22,8 @@ def cli(ctx,v):
 @cli.command()
 @click.argument('directory', default='.', type=click.Path(exists=True))
 @click.option('--index', default=DEFAULT_INDEX_LOCATION, help="index file")
-def add(directory, index):
+@click.option('--skip-known', default=False, is_flag=True, help="skip files if entry in index exists")
+def add(directory, index, skip_known):
     scanner = DirectoryScanner(directory)
 
     build_db = not os.path.exists(index)
@@ -39,7 +40,7 @@ def add(directory, index):
             item_show_func=lambda x: x.full_path[-100:] if x is not None else ''
     ) as files:
         for file in files:
-            indexer.add_file(file)
+            indexer.add_file(file, skip_known)
 
     click.echo("Successfully Indexed {0} files".format(len(real_files)))
     click.echo("A total of {0} files are indexed".format(indexer.get_index_count()))

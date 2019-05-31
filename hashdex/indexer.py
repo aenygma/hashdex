@@ -71,7 +71,12 @@ class Indexer(object):
         return self.connection.execute("SELECT hash_id FROM hashes WHERE sha1_hash = ? AND md5_hash = ? ",
                                        [sha1_hash, md5_hash]).fetchone()
 
-    def add_file(self, file):
+    def add_file(self, file, skip_known=False):
+
+        # skip if hashed; assumes if hash exists, then entry in 'files' also exists
+        if skip_known and self.in_index(file):
+            return
+
         sha_hash, md5_hash = self.hasher.get_hashes(file)
 
         cursor = self.connection.cursor()
