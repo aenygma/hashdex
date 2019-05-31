@@ -74,7 +74,8 @@ def check(directory, index, rm, mv):
                     file.full_path, original.full_path))
             deleted += 1
 
-    click.echo("{0} files of {1} files deleted !".format(deleted, len(files)))
+    if rm:
+        click.echo("{0} files of {1} files deleted !".format(deleted, len(files)))
 
 
 @cli.command()
