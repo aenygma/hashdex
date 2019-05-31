@@ -4,7 +4,7 @@ import hashdex
 from .files import DirectoryScanner
 from .indexer import Indexer, Hasher, create_connection
 
-DEFAULT_INDEX_LOCATION = '~/.config/hashdex/index.db'
+DEFAULT_INDEX_LOCATION = os.path.expanduser('~/.config/hashdex/index.db')
 
 
 @click.group(invoke_without_command=True)
