@@ -80,9 +80,11 @@ def check(directory, index, rm, mv):
 
 @cli.command()
 @click.option('--index', default=DEFAULT_INDEX_LOCATION, help="index to check against")
-def duplicates(index):
+@click.option('--filecmp/--no-filecmp', default=True, is_flag=True, help="compare contents of duplicate files")
+def duplicates(index, filecmp):
+    print(filecmp)
     indexer = Indexer(create_connection(index), Hasher())
-    for dupe_result in indexer.get_duplicates():
+    for dupe_result in indexer.get_duplicates(filecmp):
         click.echo("*" * 150)
         dupes = dupe_result.get_files()
 

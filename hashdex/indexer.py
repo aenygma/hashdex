@@ -128,7 +128,7 @@ class Indexer(object):
     def get_index_count(self):
         return self.connection.cursor().execute("SELECT COUNT(*) FROM hashes").fetchone()[0]
 
-    def get_duplicates(self):
+    def get_duplicates(self, fcomp=True):
         cursor = self.connection.cursor()
 
         dupes = cursor.execute("""
@@ -144,11 +144,15 @@ class Indexer(object):
 
             first = real_dupes[0]
             result.add_duplicate(first)
-            for next in real_dupes[1:]:
-                same = filecmp.cmp(first, next)
-                if not same:
-                    result.add_diff(next)
-                else:
+            if fcomp:
+                for next in real_dupes[1:]:
+                    same = filecmp.cmp(first, next)
+                    if not same:
+                        result.add_diff(next)
+                    else:
+                        result.add_duplicate(next)
+            else:
+                for next in real_dupes[1:]:
                     result.add_duplicate(next)
 
             yield result
