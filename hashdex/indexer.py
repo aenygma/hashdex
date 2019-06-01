@@ -2,6 +2,7 @@ import math
 import os
 import sqlite3
 import filecmp
+import magic
 from hashlib import sha1, md5
 
 from hashdex.files import DuplicateFileResult
@@ -42,7 +43,6 @@ class Hasher(object):
 
         return (sha_hash, md5_hash)
 
-
 class Indexer(object):
     def __init__(self, connection, hasher):
         self.connection = connection
@@ -62,6 +62,8 @@ class Indexer(object):
                 hash_id INTEGER,
                 full_path TEXT,
                 filename TEXT,
+                size INTEGER,
+                mimetype TEXT,
                 FOREIGN KEY(hash_id) REFERENCES hashes(hash_id)
             )
         """)
@@ -78,14 +80,18 @@ class Indexer(object):
             return
 
         sha_hash, md5_hash = self.hasher.get_hashes(file)
+        try:
+            mimetype = magic.from_file(file.full_path, mime=True)
+        except:
+            mimetype = ""
 
         cursor = self.connection.cursor()
         try:
             cursor.execute("INSERT OR IGNORE INTO hashes (sha1_hash, md5_hash) VALUES (?,?)", (sha_hash, md5_hash))
             hash_id = self._check_index(sha_hash, md5_hash)[0]
             cursor.execute(
-                "INSERT OR IGNORE INTO files (hash_id, full_path, filename) VALUES (?,?,?)",
-                (hash_id, file.full_path, file.filename)
+                "INSERT OR IGNORE INTO files (hash_id, full_path, filename, mimetype) VALUES (?,?,?,?)",
+                (hash_id, file.full_path, file.filename, mimetype)
             )
             self.connection.commit()
         except sqlite3.Error as e:
