@@ -43,10 +43,24 @@ class Hasher(object):
 
         return (sha_hash, md5_hash)
 
+class FSInfo(object):
+    """ get filesystem info for a given file """
+
+    def get_data(self, file):
+        " get magic/mimetype from file "
+
+        try:
+            mimetype = magic.from_file(file.full_path, mime=True)
+            size = os.stat(file.full_path).st_size
+        except:
+            return ('', 0)
+        return (mimetype, size)
+
 class Indexer(object):
     def __init__(self, connection, hasher):
         self.connection = connection
         self.hasher = hasher
+        self.fsinfo = FSInfo()
 
     def build_db(self, ):
         self.connection.execute("""
@@ -80,18 +94,15 @@ class Indexer(object):
             return
 
         sha_hash, md5_hash = self.hasher.get_hashes(file)
-        try:
-            mimetype = magic.from_file(file.full_path, mime=True)
-        except:
-            mimetype = ""
+        mimetype, size = self.fsinfo.get_data(file)
 
         cursor = self.connection.cursor()
         try:
             cursor.execute("INSERT OR IGNORE INTO hashes (sha1_hash, md5_hash) VALUES (?,?)", (sha_hash, md5_hash))
             hash_id = self._check_index(sha_hash, md5_hash)[0]
             cursor.execute(
-                "INSERT OR IGNORE INTO files (hash_id, full_path, filename, mimetype) VALUES (?,?,?,?)",
-                (hash_id, file.full_path, file.filename, mimetype)
+                "INSERT OR IGNORE INTO files (hash_id, full_path, filename, mimetype, size) VALUES (?,?,?,?,?)",
+                (hash_id, file.full_path, file.filename, mimetype, size)
             )
             self.connection.commit()
         except sqlite3.Error as e:

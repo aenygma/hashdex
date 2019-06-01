@@ -49,8 +49,8 @@ class TestIndexer:
 
         cursor.execute.assert_has_calls([
             mocker.call("INSERT OR IGNORE INTO hashes (sha1_hash, md5_hash) VALUES (?,?)", ("hash1", "hash2")),
-            mocker.call("INSERT OR IGNORE INTO files (hash_id, full_path, filename, mimetype) VALUES (?,?,?,?)",
-                        (1, '~/test.txt', 'test.txt', '')),
+            mocker.call("INSERT OR IGNORE INTO files (hash_id, full_path, filename, mimetype, size) VALUES (?,?,?,?,?)",
+                        (1, '~/test.txt', 'test.txt', '', 0)),
         ])
 
         assert connection.commit.called is True
